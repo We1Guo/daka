@@ -1,5 +1,6 @@
 // 全局变量
 let currentDate = new Date();
+let currentDetailDate = null; // 当前正在查看详情的日期
 let attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || {};
 let settings = JSON.parse(localStorage.getItem('settings')) || {
     baseSalary: 5000,
@@ -13,8 +14,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化页面
     updateTodayDate();
     renderCalendar();
+    initStatsSelectors();
     updateStats();
     loadSettings();
+    
+    // 初始化模态框
+    const dayDetailModal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
     
     // 绑定导航切换事件
     document.getElementById('calendarTab').addEventListener('click', (e) => {
@@ -51,6 +56,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 绑定设置保存
     document.getElementById('saveSettings').addEventListener('click', saveSettings);
+    
+    // 绑定统计报表选择器
+    document.getElementById('generateStats').addEventListener('click', generateCustomStats);
+    
+    // 绑定模态框按钮事件
+    document.getElementById('modalCheckIn').addEventListener('click', () => {
+        if (currentDetailDate) {
+            doCheckIn(currentDetailDate);
+            dayDetailModal.hide();
+        }
+    });
+    
+    document.getElementById('modalRecordOvertime').addEventListener('click', () => {
+        if (currentDetailDate) {
+            const hours = parseFloat(document.getElementById('modalOvertimeHours').value);
+            if (isNaN(hours) || hours <= 0) {
+                alert('请输入有效的小时数！');
+                return;
+            }
+            recordPastOvertime(currentDetailDate, true, hours);
+            dayDetailModal.hide();
+        }
+    });
+    
+    document.getElementById('modalRecordLeave').addEventListener('click', () => {
+        if (currentDetailDate) {
+            const hours = parseFloat(document.getElementById('modalLeaveHours').value);
+            if (isNaN(hours) || hours <= 0) {
+                alert('请输入有效的小时数！');
+                return;
+            }
+            recordPastOvertime(currentDetailDate, false, hours);
+            dayDetailModal.hide();
+        }
+    });
 });
 
 // 显示指定页面
@@ -242,7 +282,7 @@ function deleteAttendance(dateStr) {
     }
 }
 
-// 日期详情和补打卡功能
+// 日期详情和补打卡功能 - 使用模态框
 function showDayDetails(date) {
     const dateStr = formatDateString(date);
     const dayData = attendanceData[dateStr] || {};
@@ -254,78 +294,57 @@ function showDayDetails(date) {
         return;
     }
     
-    // 如果日期已有打卡记录，显示详情
+    // 保存当前查看的日期
+    currentDetailDate = date;
+    
+    // 更新模态框标题
+    document.getElementById('modalTitle').textContent = date.toLocaleDateString('zh-CN') + ' 详情';
+    
+    // 准备详情内容
+    let detailsHTML = '';
+    
     if (dayData.checkedIn) {
-        let message = `日期: ${date.toLocaleDateString('zh-CN')}\n`;
-        message += `打卡时间: ${dayData.checkTime || '未记录'}\n`;
+        detailsHTML += `<p><strong>打卡状态:</strong> ${dayData.isMakeup ? '已补打卡' : '已打卡'}</p>`;
+        detailsHTML += `<p><strong>打卡时间:</strong> ${dayData.checkTime || '未记录'}</p>`;
         
         if (dayData.overtime) {
             const overtime = parseFloat(dayData.overtime);
             if (overtime > 0) {
-                message += `加班时长: ${overtime} 小时\n`;
+                detailsHTML += `<p><strong>加班时长:</strong> <span class="overtime-positive">${overtime} 小时</span></p>`;
             } else if (overtime < 0) {
-                message += `请假时长: ${Math.abs(overtime)} 小时\n`;
+                detailsHTML += `<p><strong>请假时长:</strong> <span class="overtime-negative">${Math.abs(overtime)} 小时</span></p>`;
             }
         }
-        
-        if (dayData.isMakeup) {
-            message += `(补打卡记录)\n`;
-        }
-        
-        // 提供选项菜单
-        const action = prompt(message + '\n请选择操作:\n1. 重新打卡\n2. 记录加班\n3. 记录请假\n4. 取消', '4');
-        
-        switch(action) {
-            case '1':
-                doCheckIn(date);
-                break;
-            case '2':
-                recordPastOvertime(date, true);
-                break;
-            case '3':
-                recordPastOvertime(date, false);
-                break;
-            default:
-                // 取消操作
-                break;
-        }
-    } 
-    // 如果没有打卡记录，直接询问是否打卡
-    else {
-        const action = prompt(`${date.toLocaleDateString('zh-CN')} 没有打卡记录。\n请选择操作:\n1. 补打卡\n2. 记录加班\n3. 记录请假\n4. 取消`, '1');
-        
-        switch(action) {
-            case '1':
-                doCheckIn(date);
-                break;
-            case '2':
-                recordPastOvertime(date, true);
-                break;
-            case '3':
-                recordPastOvertime(date, false);
-                break;
-            default:
-                // 取消操作
-                break;
-        }
+    } else {
+        detailsHTML += `<p><strong>打卡状态:</strong> 未打卡</p>`;
     }
+    
+    document.getElementById('dayDetails').innerHTML = detailsHTML;
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
+    modal.show();
 }
 
-// 为过去日期记录加班/请假
-function recordPastOvertime(date, isOvertime) {
+// 为过去日期记录加班/请假 - 带预设时长
+function recordPastOvertime(date, isOvertime, hours = null) {
     const dateStr = formatDateString(date);
-    const promptText = isOvertime ? 
-        `请输入 ${date.toLocaleDateString('zh-CN')} 的加班时长(小时):` : 
-        `请输入 ${date.toLocaleDateString('zh-CN')} 的请假时长(小时):`;
     
-    const hoursInput = prompt(promptText, '');
-    if (hoursInput === null) return; // 用户取消
-    
-    let hours = parseFloat(hoursInput);
-    
-    if (isNaN(hours) || hours <= 0) {
-        alert('请输入大于0的有效时长！');
-        return;
+    // 如果没有传入小时数，则需要询问
+    if (hours === null) {
+        const promptText = isOvertime ? 
+            `请输入 ${date.toLocaleDateString('zh-CN')} 的加班时长(小时):` : 
+            `请输入 ${date.toLocaleDateString('zh-CN')} 的请假时长(小时):`;
+        
+        const hoursInput = prompt(promptText, '');
+        if (hoursInput === null) return; // 用户取消
+        
+        hours = parseFloat(hoursInput);
+        
+        if (isNaN(hours) || hours <= 0) {
+            alert('请输入大于0的有效时长！');
+            return;
+        }
     }
     
     // 如果是请假，将时间变为负值
@@ -355,11 +374,67 @@ function recordPastOvertime(date, isOvertime) {
     alert(message);
 }
 
-// 更新统计数据
-function updateStats() {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+// 初始化统计选择器
+function initStatsSelectors() {
+    // 填充年份选择器
+    const yearSelector = document.getElementById('statsYear');
+    yearSelector.innerHTML = '';
     
+    const currentYear = new Date().getFullYear();
+    // 生成从当前年份向前5年、向后1年的选项
+    for (let year = currentYear - 5; year <= currentYear + 1; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year + '年';
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        yearSelector.appendChild(option);
+    }
+    
+    // 设置月份选择器默认值为当前月份
+    const monthSelector = document.getElementById('statsMonth');
+    monthSelector.value = new Date().getMonth().toString();
+}
+
+// 生成自定义统计报表
+function generateCustomStats() {
+    const yearSelector = document.getElementById('statsYear');
+    const monthSelector = document.getElementById('statsMonth');
+    
+    const selectedYear = parseInt(yearSelector.value);
+    const selectedMonth = monthSelector.value;
+    
+    // 更新统计数据
+    if (selectedMonth === 'all') {
+        // 全年统计
+        updateYearlyStats(selectedYear);
+    } else {
+        // 月度统计
+        updateMonthlyStats(selectedYear, parseInt(selectedMonth));
+    }
+}
+
+// 更新月度统计
+function updateMonthlyStats(year, month) {
+    const startDate = new Date(year, month, 1);
+    document.getElementById('statsPage').querySelector('h2').textContent = 
+        startDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' }) + ' 工作统计';
+    
+    updateStatsForPeriod(startDate, new Date(year, month + 1, 0));
+}
+
+// 更新年度统计
+function updateYearlyStats(year) {
+    const startDate = new Date(year, 0, 1);
+    document.getElementById('statsPage').querySelector('h2').textContent = 
+        year + '年 全年工作统计';
+    
+    updateStatsForPeriod(startDate, new Date(year, 11, 31));
+}
+
+// 根据时间段更新统计数据
+function updateStatsForPeriod(startDate, endDate) {
     let workDays = 0;
     let totalOvertimeHours = 0;  // 加班时间
     let totalLeaveHours = 0;     // 请假时间
@@ -369,14 +444,11 @@ function updateStats() {
     const recordsContainer = document.getElementById('attendanceRecords');
     recordsContainer.innerHTML = '';
     
-    // 遍历当月所有日期
-    for (let day = 1; day <= 31; day++) {
-        const date = new Date(year, month, day);
-        
-        // 如果日期已经超出当月，则停止循环
-        if (date.getMonth() !== month) break;
-        
-        const dateStr = formatDateString(date);
+    // 遍历日期范围内的所有日期
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+        const dateStr = formatDateString(currentDate);
         
         if (attendanceData[dateStr] && attendanceData[dateStr].checkedIn) {
             workDays++;
@@ -394,7 +466,7 @@ function updateStats() {
             const row = document.createElement('tr');
             
             const dateCell = document.createElement('td');
-            dateCell.textContent = date.toLocaleDateString('zh-CN');
+            dateCell.textContent = currentDate.toLocaleDateString('zh-CN');
             if (attendanceData[dateStr].isMakeup) {
                 dateCell.innerHTML += ' <span class="badge bg-warning">补</span>';
             }
@@ -432,6 +504,9 @@ function updateStats() {
             
             recordsContainer.appendChild(row);
         }
+        
+        // 增加一天
+        currentDate.setDate(currentDate.getDate() + 1);
     }
     
     // 计算预计工资
@@ -454,6 +529,14 @@ function updateStats() {
     document.getElementById('overtimeHoursTotal').textContent = 
         `+${totalOvertimeHours.toFixed(1)} / -${totalLeaveHours.toFixed(1)}`;
     document.getElementById('estimatedSalary').textContent = '¥' + totalSalary.toFixed(2);
+}
+
+// 更新统计数据（当前月）
+function updateStats() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    updateMonthlyStats(year, month);
 }
 
 // 加载设置

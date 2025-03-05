@@ -67,10 +67,12 @@
                     <div class="overtime-control">
                         <label for="overtimeHours">加班/请假时长(小时):</label>
                         <div class="form-text text-muted mb-2">请输入时长并选择对应按钮</div>
-                        <div class="input-group">
+                        <div class="record-hours-container">
                             <input type="number" id="overtimeHours" min="0" max="24" step="0.5" class="form-control">
-                            <button class="btn btn-success" id="recordOvertime" type="button">记录加班</button>
-                            <button class="btn btn-danger" id="recordLeave" type="button">记录请假</button>
+                            <div class="record-buttons">
+                                <button class="btn btn-success" id="recordOvertime" type="button">记录加班</button>
+                                <button class="btn btn-danger" id="recordLeave" type="button">记录请假</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -98,7 +100,28 @@
             <!-- 统计报表页面 -->
             <div id="statsPage" class="page">
                 <div class="stats-header">
-                    <h2>本月工作统计</h2>
+                    <div class="date-selector">
+                        <select id="statsYear" class="form-select stats-selector">
+                            <!-- 年份选项将由JS动态填充 -->
+                        </select>
+                        <select id="statsMonth" class="form-select stats-selector">
+                            <option value="all">全年统计</option>
+                            <option value="0">1月</option>
+                            <option value="1">2月</option>
+                            <option value="2">3月</option>
+                            <option value="3">4月</option>
+                            <option value="4">5月</option>
+                            <option value="5">6月</option>
+                            <option value="6">7月</option>
+                            <option value="7">8月</option>
+                            <option value="8">9月</option>
+                            <option value="9">10月</option>
+                            <option value="10">11月</option>
+                            <option value="11">12月</option>
+                        </select>
+                        <button class="btn btn-primary" id="generateStats">生成报表</button>
+                    </div>
+                    <h2>工作统计</h2>
                 </div>
                 <div class="stats-cards">
                     <div class="stat-card">
@@ -165,6 +188,37 @@
                         <input type="number" id="overtimeRate" class="form-control" step="0.1" value="1.5">
                     </div>
                     <button id="saveSettings" class="btn btn-primary mt-3">保存设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日期详情模态框 -->
+    <div class="modal fade" id="dayDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">日期详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dayDetails"></div>
+                    <div class="day-actions mt-3">
+                        <button class="btn btn-primary w-100 mb-2" id="modalCheckIn">打卡</button>
+                        
+                        <div class="input-group mb-2">
+                            <input type="number" id="modalOvertimeHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数">
+                            <button class="btn btn-success" id="modalRecordOvertime">记录加班</button>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="number" id="modalLeaveHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数">
+                            <button class="btn btn-danger" id="modalRecordLeave">记录请假</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>

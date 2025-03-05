@@ -218,20 +218,28 @@ body {
     padding-top: 15px;
 }
 
-/* 修复输入框样式 */
-.input-group {
+/* 完全重写加班/请假控件样式 */
+.record-hours-container {
     display: flex;
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.input-group .form-control {
+#overtimeHours {
+    width: 100%;
+    display: block;
+    height: 38px;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+}
+
+.record-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.record-buttons .btn {
     flex: 1;
-    width: auto;
-    min-width: 80px;
-}
-
-.input-group .btn {
-    white-space: nowrap;
 }
 
 /* 日历提示说明 */
@@ -279,6 +287,21 @@ body {
 }
 
 /* 统计页面 */
+.stats-header {
+    margin-bottom: 20px;
+}
+
+.date-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.stats-selector {
+    min-width: 100px;
+}
+
 .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -362,6 +385,12 @@ body {
     padding: 3px 5px;
 }
 
+/* 模态框样式 */
+.day-actions {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .calendar-day {
@@ -384,18 +413,12 @@ body {
         font-size: 1.2rem;
     }
     
-    /* 修复移动端按钮样式 */
-    .input-group {
-        flex-direction: column;
+    .date-selector {
+        flex-wrap: wrap;
     }
     
-    .input-group .form-control {
-        width: 100%;
-    }
-    
-    .input-group .btn {
-        margin-top: 5px;
-        width: 100%;
-        border-radius: 4px !important;
+    .stats-selector {
+        flex: 1;
+        min-width: 0;
     }
 }
