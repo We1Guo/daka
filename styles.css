@@ -391,6 +391,10 @@ body {
     padding-top: 15px;
 }
 
+#modalDeleteAttendance {
+    margin-top: 10px;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .calendar-day {

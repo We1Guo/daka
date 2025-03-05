@@ -207,14 +207,16 @@
                         <button class="btn btn-primary w-100 mb-2" id="modalCheckIn">打卡</button>
                         
                         <div class="input-group mb-2">
-                            <input type="number" id="modalOvertimeHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数">
+                            <input type="number" id="modalOvertimeHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数(0=清除)">
                             <button class="btn btn-success" id="modalRecordOvertime">记录加班</button>
                         </div>
                         
-                        <div class="input-group">
-                            <input type="number" id="modalLeaveHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数">
+                        <div class="input-group mb-2">
+                            <input type="number" id="modalLeaveHours" class="form-control" min="0" max="24" step="0.5" placeholder="输入小时数(0=清除)">
                             <button class="btn btn-danger" id="modalRecordLeave">记录请假</button>
                         </div>
+                        
+                        <button class="btn btn-danger w-100" id="modalDeleteAttendance">删除打卡记录</button>
                     </div>
                 </div>
                 <div class="modal-footer">
