@@ -65,9 +65,10 @@
                         <button id="checkIn" class="btn btn-success btn-lg w-100">打卡</button>
                     </div>
                     <div class="overtime-control">
-                        <label for="overtimeHours">加班时长(小时):</label>
-                        <input type="number" id="overtimeHours" min="0" max="24" step="0.5" class="form-control">
-                        <button id="saveOvertime" class="btn btn-info mt-2">记录加班</button>
+                        <label for="overtimeHours">加班/请假时长(小时):</label>
+                        <div class="form-text text-muted mb-2">注: 正数表示加班，负数表示请假</div>
+                        <input type="number" id="overtimeHours" min="-24" max="24" step="0.5" class="form-control">
+                        <button id="saveOvertime" class="btn btn-info mt-2">记录</button>
                     </div>
                 </div>
                 
@@ -83,6 +84,10 @@
                     <div class="tip-item">
                         <span class="tip-icon overtime-icon"></span>
                         <span class="tip-text">有加班</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon leave-icon"></span>
+                        <span class="tip-text">有请假</span>
                     </div>
                 </div>
             </div>
@@ -104,7 +109,7 @@
                         <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
                         <div class="stat-content">
                             <span class="stat-value" id="overtimeHoursTotal">0</span>
-                            <span class="stat-label">加班时长(小时)</span>
+                            <span class="stat-label">加班/请假(小时)</span>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -124,7 +129,7 @@
                                 <tr>
                                     <th>日期</th>
                                     <th>打卡时间</th>
-                                    <th>加班时长</th>
+                                    <th>加班/请假时长</th>
                                     <th>操作</th>
                                 </tr>
                             </thead>

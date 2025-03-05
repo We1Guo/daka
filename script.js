@@ -144,8 +144,15 @@ function renderCalendar() {
                     dayCell.classList.add('makeup');
                 }
             }
-            if (attendanceData[dateStr].overtime > 0) {
-                dayCell.classList.add('has-overtime');
+            
+            // 区分加班和请假
+            if (attendanceData[dateStr].overtime) {
+                const overtime = parseFloat(attendanceData[dateStr].overtime);
+                if (overtime > 0) {
+                    dayCell.classList.add('has-overtime');
+                } else if (overtime < 0) {
+                    dayCell.classList.add('has-leave');
+                }
             }
         }
         
@@ -187,12 +194,12 @@ function doCheckIn(date) {
     alert(`${message}时间：${now.toLocaleTimeString()}`);
 }
 
-// 记录加班时间
+// 记录加班/请假时间
 function saveOvertime() {
     const overtimeHours = parseFloat(document.getElementById('overtimeHours').value);
     
-    if (isNaN(overtimeHours) || overtimeHours < 0) {
-        alert('请输入有效的加班时长！');
+    if (isNaN(overtimeHours)) {
+        alert('请输入有效的时长！');
         return;
     }
     
@@ -209,7 +216,11 @@ function saveOvertime() {
     renderCalendar();
     updateStats();
     
-    alert('加班时间记录成功！');
+    const message = overtimeHours >= 0 ? 
+        `加班时间记录成功: ${overtimeHours}小时` : 
+        `请假时间记录成功: ${Math.abs(overtimeHours)}小时`;
+        
+    alert(message);
     document.getElementById('overtimeHours').value = '';
 }
 
@@ -240,7 +251,16 @@ function showDayDetails(date) {
     if (dayData.checkedIn) {
         let message = `日期: ${date.toLocaleDateString('zh-CN')}\n`;
         message += `打卡时间: ${dayData.checkTime || '未记录'}\n`;
-        message += `加班时长: ${dayData.overtime || 0} 小时\n`;
+        
+        if (dayData.overtime) {
+            const overtime = parseFloat(dayData.overtime);
+            if (overtime > 0) {
+                message += `加班时长: ${overtime} 小时\n`;
+            } else if (overtime < 0) {
+                message += `请假时长: ${Math.abs(overtime)} 小时\n`;
+            }
+        }
+        
         if (dayData.isMakeup) {
             message += `(补打卡记录)`;
         }
@@ -264,7 +284,8 @@ function updateStats() {
     const month = currentDate.getMonth();
     
     let workDays = 0;
-    let totalOvertimeHours = 0;
+    let totalOvertimeHours = 0;  // 加班时间
+    let totalLeaveHours = 0;     // 请假时间
     let totalSalary = 0;
     
     // 清空考勤记录表
@@ -284,7 +305,12 @@ function updateStats() {
             workDays++;
             
             if (attendanceData[dateStr].overtime) {
-                totalOvertimeHours += parseFloat(attendanceData[dateStr].overtime);
+                const overtime = parseFloat(attendanceData[dateStr].overtime);
+                if (overtime > 0) {
+                    totalOvertimeHours += overtime;
+                } else if (overtime < 0) {
+                    totalLeaveHours += Math.abs(overtime);
+                }
             }
             
             // 添加到考勤记录表
@@ -302,7 +328,20 @@ function updateStats() {
             row.appendChild(checkTimeCell);
             
             const overtimeCell = document.createElement('td');
-            overtimeCell.textContent = attendanceData[dateStr].overtime || '0';
+            if (attendanceData[dateStr].overtime) {
+                const overtime = parseFloat(attendanceData[dateStr].overtime);
+                if (overtime > 0) {
+                    overtimeCell.textContent = `+${overtime}`;
+                    overtimeCell.className = 'overtime-positive';
+                } else if (overtime < 0) {
+                    overtimeCell.textContent = `${overtime}`;
+                    overtimeCell.className = 'overtime-negative';
+                } else {
+                    overtimeCell.textContent = '0';
+                }
+            } else {
+                overtimeCell.textContent = '0';
+            }
             row.appendChild(overtimeCell);
             
             // 添加操作列
@@ -320,16 +359,23 @@ function updateStats() {
     
     // 计算预计工资
     const dailyRate = settings.baseSalary / settings.workDaysPerMonth;
+    const hourlyRate = settings.baseSalary / (settings.workDaysPerMonth * settings.dailyWorkHours);
+    
+    // 基本工资
     totalSalary = workDays * dailyRate;
     
     // 加班工资
-    const hourlyRate = settings.baseSalary / (settings.workDaysPerMonth * settings.dailyWorkHours);
     const overtimePay = totalOvertimeHours * hourlyRate * settings.overtimeRate;
     totalSalary += overtimePay;
     
+    // 请假扣款
+    const leavePay = totalLeaveHours * hourlyRate;
+    totalSalary -= leavePay;
+    
     // 更新统计显示
     document.getElementById('workDays').textContent = workDays;
-    document.getElementById('overtimeHoursTotal').textContent = totalOvertimeHours.toFixed(1);
+    document.getElementById('overtimeHoursTotal').textContent = 
+        `+${totalOvertimeHours.toFixed(1)} / -${totalLeaveHours.toFixed(1)}`;
     document.getElementById('estimatedSalary').textContent = '¥' + totalSalary.toFixed(2);
 }
 
