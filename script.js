@@ -138,11 +138,11 @@ function renderCalendar() {
         // 如果有考勤记录
         if (attendanceData[dateStr]) {
             if (attendanceData[dateStr].checkedIn) {
-                dayCell.classList.add('checked-in');
-                
                 // 如果是补打卡
                 if (attendanceData[dateStr].isMakeup) {
                     dayCell.classList.add('makeup');
+                } else {
+                    dayCell.classList.add('checked-in');
                 }
             }
             
@@ -200,8 +200,8 @@ function saveOvertime(isOvertime) {
     const hoursInput = document.getElementById('overtimeHours');
     let hours = parseFloat(hoursInput.value);
     
-    if (isNaN(hours) || hours < 0) {
-        alert('请输入有效的时长！');
+    if (isNaN(hours) || hours <= 0) {
+        alert('请输入大于0的有效时长！');
         return;
     }
     
@@ -292,10 +292,21 @@ function showDayDetails(date) {
     } 
     // 如果没有打卡记录，直接询问是否打卡
     else {
-        const action = prompt(`${date.toLocaleDateString('zh-CN')} 没有打卡记录。\n请选择操作:\n1. 补打卡\n2. 取消`, '1');
+        const action = prompt(`${date.toLocaleDateString('zh-CN')} 没有打卡记录。\n请选择操作:\n1. 补打卡\n2. 记录加班\n3. 记录请假\n4. 取消`, '1');
         
-        if (action === '1') {
-            doCheckIn(date);
+        switch(action) {
+            case '1':
+                doCheckIn(date);
+                break;
+            case '2':
+                recordPastOvertime(date, true);
+                break;
+            case '3':
+                recordPastOvertime(date, false);
+                break;
+            default:
+                // 取消操作
+                break;
         }
     }
 }
@@ -323,8 +334,12 @@ function recordPastOvertime(date, isOvertime) {
     }
     
     if (!attendanceData[dateStr]) {
-        alert('请先为该日期打卡后再记录加班/请假！');
-        return;
+        // 创建一个新的打卡记录，这样过去的日期不打卡也可以记录加班/请假
+        attendanceData[dateStr] = {
+            checkedIn: true,
+            checkTime: '(系统自动记录)',
+            isMakeup: true
+        };
     }
     
     attendanceData[dateStr].overtime = hours;
