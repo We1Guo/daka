@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 绑定打卡按钮
     document.getElementById('checkIn').addEventListener('click', checkInOut);
-    document.getElementById('saveOvertime').addEventListener('click', saveOvertime);
+    document.getElementById('recordOvertime').addEventListener('click', () => saveOvertime(true));
+    document.getElementById('recordLeave').addEventListener('click', () => saveOvertime(false));
     
     // 绑定设置保存
     document.getElementById('saveSettings').addEventListener('click', saveSettings);
@@ -195,12 +196,18 @@ function doCheckIn(date) {
 }
 
 // 记录加班/请假时间
-function saveOvertime() {
-    const overtimeHours = parseFloat(document.getElementById('overtimeHours').value);
+function saveOvertime(isOvertime) {
+    const hoursInput = document.getElementById('overtimeHours');
+    let hours = parseFloat(hoursInput.value);
     
-    if (isNaN(overtimeHours)) {
+    if (isNaN(hours) || hours < 0) {
         alert('请输入有效的时长！');
         return;
+    }
+    
+    // 如果是请假，将时间变为负值
+    if (isOvertime === false) {
+        hours = -hours;
     }
     
     const today = new Date();
@@ -210,18 +217,18 @@ function saveOvertime() {
         attendanceData[dateStr] = {};
     }
     
-    attendanceData[dateStr].overtime = overtimeHours;
+    attendanceData[dateStr].overtime = hours;
     
     localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
     renderCalendar();
     updateStats();
     
-    const message = overtimeHours >= 0 ? 
-        `加班时间记录成功: ${overtimeHours}小时` : 
-        `请假时间记录成功: ${Math.abs(overtimeHours)}小时`;
+    const message = hours >= 0 ? 
+        `加班时间记录成功: ${hours}小时` : 
+        `请假时间记录成功: ${Math.abs(hours)}小时`;
         
     alert(message);
-    document.getElementById('overtimeHours').value = '';
+    hoursInput.value = '';
 }
 
 // 删除打卡记录

@@ -371,4 +371,14 @@ body {
     .stat-value {
         font-size: 1.2rem;
     }
+    
+    /* 加班/请假按钮在小屏幕上的样式 */
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .input-group .btn {
+        margin-top: 5px;
+        border-radius: 4px !important;
+    }
 }
