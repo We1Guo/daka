@@ -269,20 +269,75 @@ function showDayDetails(date) {
         }
         
         if (dayData.isMakeup) {
-            message += `(补打卡记录)`;
+            message += `(补打卡记录)\n`;
         }
         
-        // 询问是否需要重新打卡
-        if (confirm(message + '\n\n需要重新打卡吗？')) {
-            doCheckIn(date);
+        // 提供选项菜单
+        const action = prompt(message + '\n请选择操作:\n1. 重新打卡\n2. 记录加班\n3. 记录请假\n4. 取消', '4');
+        
+        switch(action) {
+            case '1':
+                doCheckIn(date);
+                break;
+            case '2':
+                recordPastOvertime(date, true);
+                break;
+            case '3':
+                recordPastOvertime(date, false);
+                break;
+            default:
+                // 取消操作
+                break;
         }
     } 
     // 如果没有打卡记录，直接询问是否打卡
     else {
-        if (confirm(`是否要为 ${date.toLocaleDateString('zh-CN')} 打卡？`)) {
+        const action = prompt(`${date.toLocaleDateString('zh-CN')} 没有打卡记录。\n请选择操作:\n1. 补打卡\n2. 取消`, '1');
+        
+        if (action === '1') {
             doCheckIn(date);
         }
     }
+}
+
+// 为过去日期记录加班/请假
+function recordPastOvertime(date, isOvertime) {
+    const dateStr = formatDateString(date);
+    const promptText = isOvertime ? 
+        `请输入 ${date.toLocaleDateString('zh-CN')} 的加班时长(小时):` : 
+        `请输入 ${date.toLocaleDateString('zh-CN')} 的请假时长(小时):`;
+    
+    const hoursInput = prompt(promptText, '');
+    if (hoursInput === null) return; // 用户取消
+    
+    let hours = parseFloat(hoursInput);
+    
+    if (isNaN(hours) || hours <= 0) {
+        alert('请输入大于0的有效时长！');
+        return;
+    }
+    
+    // 如果是请假，将时间变为负值
+    if (!isOvertime) {
+        hours = -hours;
+    }
+    
+    if (!attendanceData[dateStr]) {
+        alert('请先为该日期打卡后再记录加班/请假！');
+        return;
+    }
+    
+    attendanceData[dateStr].overtime = hours;
+    
+    localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+    renderCalendar();
+    updateStats();
+    
+    const message = hours > 0 ? 
+        `加班时间记录成功: ${hours}小时` : 
+        `请假时间记录成功: ${Math.abs(hours)}小时`;
+        
+    alert(message);
 }
 
 // 更新统计数据

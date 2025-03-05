@@ -133,15 +133,13 @@ body {
 }
 
 .calendar-day.makeup::after {
-    content: "补";
+    content: "✓";
     position: absolute;
     top: 2px;
     right: 5px;
-    background-color: #ffc107;
-    color: #000;
-    font-size: 0.6rem;
-    padding: 1px 3px;
-    border-radius: 3px;
+    color: #ffc107;
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
 .calendar-day:hover::before {
@@ -245,11 +243,8 @@ body {
 }
 
 .makeup-icon {
-    background-color: var(--warning-color);
-    color: #000;
-    font-size: 0.6rem;
-    padding: 1px 3px;
-    border-radius: 3px;
+    color: #ffc107;
+    font-weight: bold;
 }
 
 .overtime-icon {
