@@ -120,6 +120,22 @@ body {
     font-weight: bold;
 }
 
+.calendar-day.makeup {
+    position: relative;
+}
+
+.calendar-day.makeup::after {
+    content: "补";
+    position: absolute;
+    top: 2px;
+    right: 5px;
+    background-color: #ffc107;
+    color: #000;
+    font-size: 0.6rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
 .calendar-day.weekend {
     background-color: #fff5f5;
 }
@@ -130,6 +146,13 @@ body {
 
 .calendar-day.has-overtime {
     border-top: 3px solid var(--warning-color);
+}
+
+.calendar-day .check-status {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    font-size: 0.7rem;
 }
 
 /* 打卡面板 */
@@ -162,6 +185,12 @@ body {
 
 .overtime-control {
     margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+/* 补打卡样式 */
+.makeup-check {
     border-top: 1px solid #eee;
     padding-top: 15px;
 }
@@ -221,6 +250,22 @@ body {
 
 .setting-item {
     margin-bottom: 15px;
+}
+
+/* 按钮样式美化 */
+.btn-lg {
+    font-size: 1.2rem;
+    padding: 12px;
+}
+
+/* 表格样式优化 */
+.table {
+    font-size: 0.9rem;
+}
+
+.badge {
+    font-size: 0.65rem;
+    padding: 3px 5px;
 }
 
 /* 响应式调整 */

@@ -62,13 +62,26 @@
                     <h3>今日打卡</h3>
                     <div class="today-date" id="todayDate"></div>
                     <div class="check-buttons">
-                        <button id="checkIn" class="btn btn-success">上班打卡</button>
-                        <button id="checkOut" class="btn btn-warning">下班打卡</button>
+                        <button id="checkIn" class="btn btn-success btn-lg w-100">打卡</button>
                     </div>
                     <div class="overtime-control">
                         <label for="overtimeHours">加班时长(小时):</label>
                         <input type="number" id="overtimeHours" min="0" max="24" step="0.5" class="form-control">
                         <button id="saveOvertime" class="btn btn-info mt-2">记录加班</button>
+                    </div>
+                    
+                    <!-- 补打卡功能 -->
+                    <div class="makeup-check mt-4">
+                        <h4>补打卡</h4>
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <label for="makeupDate">选择日期:</label>
+                                <input type="date" id="makeupDate" class="form-control">
+                            </div>
+                            <div class="col-4 d-flex align-items-end">
+                                <button id="makeupCheck" class="btn btn-secondary w-100">补卡</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -109,10 +122,9 @@
                             <thead>
                                 <tr>
                                     <th>日期</th>
-                                    <th>上班时间</th>
-                                    <th>下班时间</th>
-                                    <th>工作时长</th>
+                                    <th>打卡时间</th>
                                     <th>加班时长</th>
+                                    <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody id="attendanceRecords">

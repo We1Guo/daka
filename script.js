@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 绑定打卡按钮
-    document.getElementById('checkIn').addEventListener('click', checkIn);
-    document.getElementById('checkOut').addEventListener('click', checkOut);
+    document.getElementById('checkIn').addEventListener('click', checkInOut);
     document.getElementById('saveOvertime').addEventListener('click', saveOvertime);
+    document.getElementById('makeupCheck').addEventListener('click', makeupCheckIn);
     
     // 绑定设置保存
     document.getElementById('saveSettings').addEventListener('click', saveSettings);
@@ -139,6 +139,11 @@ function renderCalendar() {
         if (attendanceData[dateStr]) {
             if (attendanceData[dateStr].checkedIn) {
                 dayCell.classList.add('checked-in');
+                
+                // 如果是补打卡
+                if (attendanceData[dateStr].isMakeup) {
+                    dayCell.classList.add('makeup');
+                }
             }
             if (attendanceData[dateStr].overtime > 0) {
                 dayCell.classList.add('has-overtime');
@@ -152,50 +157,65 @@ function renderCalendar() {
     }
 }
 
-// 上班打卡
-function checkIn() {
+// 打卡功能
+function checkInOut() {
     const today = new Date();
     const dateStr = formatDateString(today);
     
     if (!attendanceData[dateStr]) {
         attendanceData[dateStr] = {};
+    } else if (attendanceData[dateStr].checkedIn) {
+        if (!confirm('今日已打卡，是否重新打卡？')) {
+            return;
+        }
     }
     
     attendanceData[dateStr].checkedIn = true;
-    attendanceData[dateStr].checkInTime = today.toLocaleTimeString();
+    attendanceData[dateStr].checkTime = today.toLocaleTimeString();
     
     localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
     renderCalendar();
     
-    alert('上班打卡成功！时间：' + today.toLocaleTimeString());
+    alert('打卡成功！时间：' + today.toLocaleTimeString());
 }
 
-// 下班打卡
-function checkOut() {
-    const today = new Date();
-    const dateStr = formatDateString(today);
-    
-    if (!attendanceData[dateStr] || !attendanceData[dateStr].checkedIn) {
-        alert('请先进行上班打卡！');
+// 补打卡功能
+function makeupCheckIn() {
+    const makeupDateEl = document.getElementById('makeupDate');
+    if (!makeupDateEl.value) {
+        alert('请选择需要补打卡的日期！');
         return;
     }
     
-    attendanceData[dateStr].checkedOut = true;
-    attendanceData[dateStr].checkOutTime = today.toLocaleTimeString();
+    const selectedDate = new Date(makeupDateEl.value);
+    const now = new Date();
     
-    // 计算工作时长
-    const checkInTime = new Date(today);
-    const [inHours, inMinutes] = attendanceData[dateStr].checkInTime.split(':');
-    checkInTime.setHours(parseInt(inHours, 10), parseInt(inMinutes, 10), 0);
+    // 检查补打卡日期是否在未来
+    if (selectedDate > now) {
+        alert('不能为未来日期打卡！');
+        return;
+    }
     
-    const workHours = (today - checkInTime) / (1000 * 60 * 60);
-    attendanceData[dateStr].workHours = Math.round(workHours * 10) / 10;
+    const dateStr = formatDateString(selectedDate);
+    
+    if (!attendanceData[dateStr]) {
+        attendanceData[dateStr] = {};
+    } else if (attendanceData[dateStr].checkedIn) {
+        if (!confirm(`${selectedDate.toLocaleDateString('zh-CN')} 已有打卡记录，是否覆盖？`)) {
+            return;
+        }
+    }
+    
+    attendanceData[dateStr].checkedIn = true;
+    attendanceData[dateStr].checkTime = now.toLocaleTimeString();
+    attendanceData[dateStr].isMakeup = true; // 标记为补打卡
     
     localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
     renderCalendar();
     updateStats();
     
-    alert('下班打卡成功！时间：' + today.toLocaleTimeString());
+    alert(`${selectedDate.toLocaleDateString('zh-CN')} 补打卡成功！`);
+    makeupDateEl.value = '';
 }
 
 // 记录加班时间
@@ -224,6 +244,17 @@ function saveOvertime() {
     document.getElementById('overtimeHours').value = '';
 }
 
+// 删除打卡记录
+function deleteAttendance(dateStr) {
+    if (confirm('确定要删除这条打卡记录吗？')) {
+        delete attendanceData[dateStr];
+        localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        renderCalendar();
+        updateStats();
+        alert('记录已删除');
+    }
+}
+
 // 日期详情
 function showDayDetails(date) {
     const dateStr = formatDateString(date);
@@ -232,10 +263,11 @@ function showDayDetails(date) {
     let message = `日期: ${date.toLocaleDateString('zh-CN')}\n`;
     
     if (dayData.checkedIn) {
-        message += `上班时间: ${dayData.checkInTime || '未记录'}\n`;
-        message += `下班时间: ${dayData.checkOutTime || '未记录'}\n`;
-        message += `工作时长: ${dayData.workHours || '未记录'} 小时\n`;
+        message += `打卡时间: ${dayData.checkTime || '未记录'}\n`;
         message += `加班时长: ${dayData.overtime || 0} 小时\n`;
+        if (dayData.isMakeup) {
+            message += `(补打卡记录)`;
+        }
     } else {
         message += '未打卡';
     }
@@ -277,23 +309,27 @@ function updateStats() {
             
             const dateCell = document.createElement('td');
             dateCell.textContent = date.toLocaleDateString('zh-CN');
+            if (attendanceData[dateStr].isMakeup) {
+                dateCell.innerHTML += ' <span class="badge bg-warning">补</span>';
+            }
             row.appendChild(dateCell);
             
-            const checkInCell = document.createElement('td');
-            checkInCell.textContent = attendanceData[dateStr].checkInTime || '-';
-            row.appendChild(checkInCell);
-            
-            const checkOutCell = document.createElement('td');
-            checkOutCell.textContent = attendanceData[dateStr].checkOutTime || '-';
-            row.appendChild(checkOutCell);
-            
-            const workHoursCell = document.createElement('td');
-            workHoursCell.textContent = attendanceData[dateStr].workHours || '-';
-            row.appendChild(workHoursCell);
+            const checkTimeCell = document.createElement('td');
+            checkTimeCell.textContent = attendanceData[dateStr].checkTime || '-';
+            row.appendChild(checkTimeCell);
             
             const overtimeCell = document.createElement('td');
             overtimeCell.textContent = attendanceData[dateStr].overtime || '0';
             row.appendChild(overtimeCell);
+            
+            // 添加操作列
+            const actionCell = document.createElement('td');
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger';
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            deleteBtn.addEventListener('click', () => deleteAttendance(dateStr));
+            actionCell.appendChild(deleteBtn);
+            row.appendChild(actionCell);
             
             recordsContainer.appendChild(row);
         }
