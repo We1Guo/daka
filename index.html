@@ -69,19 +69,20 @@
                         <input type="number" id="overtimeHours" min="0" max="24" step="0.5" class="form-control">
                         <button id="saveOvertime" class="btn btn-info mt-2">记录加班</button>
                     </div>
-                    
-                    <!-- 补打卡功能 -->
-                    <div class="makeup-check mt-4">
-                        <h4>补打卡</h4>
-                        <div class="row g-2">
-                            <div class="col-8">
-                                <label for="makeupDate">选择日期:</label>
-                                <input type="date" id="makeupDate" class="form-control">
-                            </div>
-                            <div class="col-4 d-flex align-items-end">
-                                <button id="makeupCheck" class="btn btn-secondary w-100">补卡</button>
-                            </div>
-                        </div>
+                </div>
+                
+                <div class="calendar-tips">
+                    <div class="tip-item">
+                        <span class="tip-icon checked-in-icon">✓</span>
+                        <span class="tip-text">已打卡</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon makeup-icon">补</span>
+                        <span class="tip-text">补打卡</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon overtime-icon"></span>
+                        <span class="tip-text">有加班</span>
                     </div>
                 </div>
             </div>

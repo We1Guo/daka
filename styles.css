@@ -90,10 +90,18 @@ body {
     position: relative;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .calendar-day:hover {
     background-color: #f0f0f0;
+}
+
+.calendar-day:active {
+    background-color: #e8e8e8;
+    transform: scale(0.98);
 }
 
 .calendar-day .day-number {
@@ -134,6 +142,24 @@ body {
     font-size: 0.6rem;
     padding: 1px 3px;
     border-radius: 3px;
+}
+
+.calendar-day:hover::before {
+    content: "点击打卡";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--primary-color);
+    background-color: rgba(255,255,255,0.8);
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.calendar-day.checked-in:hover::before {
+    content: "查看详情";
 }
 
 .calendar-day.weekend {
@@ -189,10 +215,44 @@ body {
     padding-top: 15px;
 }
 
-/* 补打卡样式 */
-.makeup-check {
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+/* 日历提示说明 */
+.calendar-tips {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.tip-icon {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.checked-in-icon {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.makeup-icon {
+    background-color: var(--warning-color);
+    color: #000;
+    font-size: 0.6rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+.overtime-icon {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: var(--warning-color);
 }
 
 /* 统计页面 */

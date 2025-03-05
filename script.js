@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 绑定打卡按钮
     document.getElementById('checkIn').addEventListener('click', checkInOut);
     document.getElementById('saveOvertime').addEventListener('click', saveOvertime);
-    document.getElementById('makeupCheck').addEventListener('click', makeupCheckIn);
     
     // 绑定设置保存
     document.getElementById('saveSettings').addEventListener('click', saveSettings);
@@ -159,63 +158,33 @@ function renderCalendar() {
 
 // 打卡功能
 function checkInOut() {
-    const today = new Date();
-    const dateStr = formatDateString(today);
-    
-    if (!attendanceData[dateStr]) {
-        attendanceData[dateStr] = {};
-    } else if (attendanceData[dateStr].checkedIn) {
-        if (!confirm('今日已打卡，是否重新打卡？')) {
-            return;
-        }
-    }
-    
-    attendanceData[dateStr].checkedIn = true;
-    attendanceData[dateStr].checkTime = today.toLocaleTimeString();
-    
-    localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-    renderCalendar();
-    
-    alert('打卡成功！时间：' + today.toLocaleTimeString());
+    doCheckIn(new Date());
 }
 
-// 补打卡功能
-function makeupCheckIn() {
-    const makeupDateEl = document.getElementById('makeupDate');
-    if (!makeupDateEl.value) {
-        alert('请选择需要补打卡的日期！');
-        return;
-    }
-    
-    const selectedDate = new Date(makeupDateEl.value);
+// 执行打卡（支持当天和补打卡）
+function doCheckIn(date) {
     const now = new Date();
-    
-    // 检查补打卡日期是否在未来
-    if (selectedDate > now) {
-        alert('不能为未来日期打卡！');
-        return;
-    }
-    
-    const dateStr = formatDateString(selectedDate);
+    const dateStr = formatDateString(date);
+    const isToday = date.toDateString() === now.toDateString();
     
     if (!attendanceData[dateStr]) {
         attendanceData[dateStr] = {};
-    } else if (attendanceData[dateStr].checkedIn) {
-        if (!confirm(`${selectedDate.toLocaleDateString('zh-CN')} 已有打卡记录，是否覆盖？`)) {
-            return;
-        }
     }
     
     attendanceData[dateStr].checkedIn = true;
     attendanceData[dateStr].checkTime = now.toLocaleTimeString();
-    attendanceData[dateStr].isMakeup = true; // 标记为补打卡
+    
+    // 如果不是今天，标记为补打卡
+    if (!isToday) {
+        attendanceData[dateStr].isMakeup = true;
+    }
     
     localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
     renderCalendar();
     updateStats();
     
-    alert(`${selectedDate.toLocaleDateString('zh-CN')} 补打卡成功！`);
-    makeupDateEl.value = '';
+    const message = isToday ? '打卡成功！' : '补打卡成功！';
+    alert(`${message}时间：${now.toLocaleTimeString()}`);
 }
 
 // 记录加班时间
@@ -255,24 +224,38 @@ function deleteAttendance(dateStr) {
     }
 }
 
-// 日期详情
+// 日期详情和补打卡功能
 function showDayDetails(date) {
     const dateStr = formatDateString(date);
     const dayData = attendanceData[dateStr] || {};
+    const today = new Date();
     
-    let message = `日期: ${date.toLocaleDateString('zh-CN')}\n`;
+    // 如果是未来日期，不允许打卡
+    if (date > today) {
+        alert('不能为未来日期打卡！');
+        return;
+    }
     
+    // 如果日期已有打卡记录，显示详情
     if (dayData.checkedIn) {
+        let message = `日期: ${date.toLocaleDateString('zh-CN')}\n`;
         message += `打卡时间: ${dayData.checkTime || '未记录'}\n`;
         message += `加班时长: ${dayData.overtime || 0} 小时\n`;
         if (dayData.isMakeup) {
             message += `(补打卡记录)`;
         }
-    } else {
-        message += '未打卡';
+        
+        // 询问是否需要重新打卡
+        if (confirm(message + '\n\n需要重新打卡吗？')) {
+            doCheckIn(date);
+        }
+    } 
+    // 如果没有打卡记录，直接询问是否打卡
+    else {
+        if (confirm(`是否要为 ${date.toLocaleDateString('zh-CN')} 打卡？`)) {
+            doCheckIn(date);
+        }
     }
-    
-    alert(message);
 }
 
 // 更新统计数据
